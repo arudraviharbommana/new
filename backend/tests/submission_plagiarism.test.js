@@ -23,16 +23,16 @@ describe('Submission & Plagiarism', () => {
 
     const sub1 = await request(app).post('/api/student/submit').set('Authorization', `Bearer ${studentToken}`).field('assignment_id', asgId).field('content', 'This is a unique submission about apples');
     expect(sub1.statusCode).toBe(201);
+    // legacy field kept, and relatability metrics are saved on the submission
     expect(sub1.body.plagiarism_score).toBeDefined();
     expect(sub1.body.plagiarism_score).toBe(0);
 
-    // submit a similar text
+    // submit a similar text (still compares to assignment description, not other students)
     const sub2 = await request(app).post('/api/student/submit').set('Authorization', `Bearer ${studentToken}`).field('assignment_id', asgId).field('content', 'This is a unique submission about apples and oranges');
     expect(sub2.statusCode).toBe(201);
-    // second submission should compare to first and produce a score >= 0
     expect(typeof sub2.body.plagiarism_score).toBe('number');
 
-    // professor can query plagiarism for a specific submission
+    // professor can query relatability report for a specific submission
     const subsForProf = await request(app).get('/api/professor/submissions').set('Authorization', `Bearer ${profToken}`);
     expect(subsForProf.statusCode).toBe(200);
     expect(subsForProf.body.length).toBeGreaterThanOrEqual(2);
@@ -40,6 +40,12 @@ describe('Submission & Plagiarism', () => {
     const lastSub = subsForProf.body[0];
     const plagiarismRes = await request(app).get(`/api/professor/plagiarism/${lastSub._id}`).set('Authorization', `Bearer ${profToken}`);
     expect(plagiarismRes.statusCode).toBe(200);
-    expect(plagiarismRes.body.plagiarism_score).toBeDefined();
+    expect(plagiarismRes.body.report).toBeDefined();
+    expect(plagiarismRes.body.report.relatability_score).toBeDefined();
+
+    // professor can mark a submission directly
+    const markRes = await request(app).post(`/api/professor/mark/${lastSub._id}`).set('Authorization', `Bearer ${profToken}`).send({ professor_mark: 85, professor_comment: 'Good work' });
+    expect(markRes.statusCode).toBe(200);
+    expect(markRes.body.final_mark).toBe(85);
   });
 });

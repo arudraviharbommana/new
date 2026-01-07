@@ -5,7 +5,7 @@ This backend is a translated implementation of the provided Python FastAPI spec 
 Key features:
 - JWT authentication with roles (student, professor, admin)
 - Assignment and submission workflows
-- Plagiarism service (TF-IDF + cosine similarity)
+- Relatability analysis service (TF-IDF + heuristics) — compares a submission to the assignment description and computes metrics such as content similarity, variable name similarity, comment style similarity, structure heuristics and potential external matches. This intentionally does NOT flag inter-student plagiarism (submissions are not compared to each other by default).
 - File uploads via multipart/form-data (stored in `uploads/`)
 - Seed script to create sample users, assignments, and submissions
 
@@ -44,7 +44,8 @@ Student
 Professor
 - POST `/api/professor/assignment` (title,description,deadline) (Bearer token role=professor)
 - GET `/api/professor/submissions` (Bearer token role=professor)
-- GET `/api/professor/plagiarism/:submission_id` (Bearer token role=professor)
+- GET `/api/professor/plagiarism/:submission_id` (Bearer token role=professor) — returns a detailed `report` object describing relatability metrics
+- POST `/api/professor/mark/:submission_id` (Bearer token role=professor) — submit `professor_mark` and `professor_comment` to set a direct mark for the submission
 
 Admin
 - GET `/api/admin/users` (Bearer token role=admin)

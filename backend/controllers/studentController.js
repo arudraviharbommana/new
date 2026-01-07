@@ -17,11 +17,11 @@ async function submit(req, res) {
     const sub = new Submission({ assignment_id, student_id: req.user._id, content: content || '', file_path: filePath });
     await sub.save();
 
-    // run plagiarism check against other submissions
+    // run relatability analysis against assignment description (AI/heuristics)
+    // This intentionally does NOT compare against other students' submissions.
     const score = await plagiarism.checkSubmission(sub);
-    sub.plagiarism_score = score;
-    await sub.save();
 
+    // `score` is legacy plagiarism_score (kept 0); relatability metrics are stored on the submission
     res.status(201).json(sub);
   } catch (err) {
     console.error(err);

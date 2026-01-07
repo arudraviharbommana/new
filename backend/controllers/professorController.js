@@ -31,12 +31,34 @@ async function getSubmissions(req, res) {
 async function getPlagiarism(req, res) {
   try {
     const { submission_id } = req.params;
-    const score = await plagiarism.checkSubmissionById(submission_id);
-    res.json({ submission_id, plagiarism_score: score });
+    const report = await plagiarism.checkSubmissionById(submission_id);
+    res.json({ submission_id, report });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to compute plagiarism' });
+    res.status(500).json({ error: 'Failed to compute plagiarism/relatability' });
   }
 }
 
-module.exports = { createAssignment, getSubmissions, getPlagiarism };
+// Professors can submit direct marks and comments. If provided, professor_mark overrides automatic final mark.
+async function markSubmission(req, res) {
+  try {
+    const { submission_id } = req.params;
+    const { professor_mark, professor_comment } = req.body;
+    const sub = await Submission.findById(submission_id);
+    if (!sub) return res.status(404).json({ error: 'Submission not found' });
+
+    if (typeof professor_mark === 'number') {
+      sub.professor_mark = professor_mark;
+      sub.final_mark = professor_mark;
+    }
+    if (typeof professor_comment === 'string') sub.professor_comment = professor_comment;
+
+    await sub.save();
+    res.json(sub);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to mark submission' });
+  }
+}
+
+module.exports = { createAssignment, getSubmissions, getPlagiarism, markSubmission };

@@ -27,6 +27,7 @@ router.get('/student/submissions', verifyToken, requireRole('student'), studentC
 router.post('/professor/assignment', verifyToken, requireRole('professor'), professorController.createAssignment);
 router.get('/professor/submissions', verifyToken, requireRole('professor'), professorController.getSubmissions);
 router.get('/professor/plagiarism/:submission_id', verifyToken, requireRole('professor'), professorController.getPlagiarism);
+router.post('/professor/mark/:submission_id', verifyToken, requireRole('professor'), professorController.markSubmission);
 
 // Admin
 router.get('/admin/users', verifyToken, requireRole('admin'), adminController.listUsers);
